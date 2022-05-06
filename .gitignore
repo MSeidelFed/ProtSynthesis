@@ -1,5 +1,4 @@
 .Rproj.user
-.Rbuildignore
-.RData
 .Rhistory
-ProtSynthesis.Rproj
+.RData
+.Ruserdata
