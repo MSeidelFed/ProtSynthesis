@@ -8,7 +8,7 @@ For detailed usage of this package and to understand how to produce the input da
 ```
 library(devtools)
 
-### Get the latest installation of RandoDiStats (KineticMSI depends on it)
+### Get the latest installation of RandoDiStats (ProtSynthesis depends on it)
 
 devtools::install_github("MSeidelFed/RandodiStats_package")
 library(RandoDiStats)
