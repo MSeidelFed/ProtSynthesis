@@ -23,11 +23,11 @@ isotopeEnrichment <- function(PyResultsDir = paste0(system.file("extdata", packa
                               verbose = FALSE,
                               rmIsotopologs = 0,
                               OptimizeIsotopologNr = FALSE,
-                              files2correct = NULL,
-                              AA4correction = NULL,
+                              files2correct = list.files(path = system.file("extdata", package = "ProtSynthesis"), pattern = "Mean_Norm_Factor"),
+                              AA4correction = c("Serine", "Glycine"),
                               AAinterprtFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/", "AminoAcidNames2SingleLetters.csv"),
                               ElementalFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/", "ElementFile.csv"),
-                              ProtPTMs,
+                              ProtPTMs = c("OX", "AC"),
                               LabelledSamplesNr) {
   
   ## Functions needed
