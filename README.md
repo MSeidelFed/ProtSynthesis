@@ -25,5 +25,5 @@ library(ProtSynthesis)
 These datasets were used to produce the results in XX journal publication.
 
 ```
-system.file("extdata", package = "KineticMSI")
+system.file("extdata", package = "ProtSynthesis")
 ```
