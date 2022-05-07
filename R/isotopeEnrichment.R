@@ -28,7 +28,7 @@ isotopeEnrichment <- function(PyResultsDir = paste0(system.file("extdata", packa
                               AAinterprtFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/", "AminoAcidNames2SingleLetters.csv"),
                               ElementalFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/", "ElementFile.csv"),
                               ProtPTMs = c("OX", "AC"),
-                              LabelledSamplesNr) {
+                              LabelledSamplesNr = 6) {
   
   ## Functions needed
   ### list to data.frame
