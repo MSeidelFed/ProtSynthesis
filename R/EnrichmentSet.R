@@ -17,7 +17,10 @@
 #' ...
 
 EnrichmentSet <- function(EnrichmentFileDir,
-                          Treatment,
+                          Treatment = as.factor(c(rep("Control_NL",3),
+                                                  rep("Control_L",3),
+                                                  rep("Treatment_NL",3),
+                                                  rep("Treatment_L",3))),
                           LabelFactor = as.factor(rep(c(rep("Control", 3),
                                                         rep("Labelled", 3)),2)),
                           NLMAX = 0.05,
