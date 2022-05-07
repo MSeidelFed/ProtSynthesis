@@ -18,15 +18,15 @@
 #' 
 #' ...
 
-isotopeEnrichment <- function(PyResultsDir,
+isotopeEnrichment <- function(PyResultsDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/", "intensities.tsv"),
                               returnCSV = TRUE,
                               verbose = FALSE,
                               rmIsotopologs = 0,
                               OptimizeIsotopologNr = FALSE,
                               files2correct = NULL,
                               AA4correction = NULL,
-                              AAinterprtFileDir,
-                              ElementalFileDir,
+                              AAinterprtFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/", "AminoAcidNames2SingleLetters.csv"),
+                              ElementalFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/", "ElementFile.csv"),
                               ProtPTMs,
                               LabelledSamplesNr) {
   
