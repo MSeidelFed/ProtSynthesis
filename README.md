@@ -1,7 +1,7 @@
 # ProtSynthesis
 R package to calculate fractional protein synthesis rates
 
-For detailed usage please check out the [isotopeEnrichment](https://github.com/mgleeming/isotopeEnrichment/blob/master/README.md) repository.
+For detailed usage of this package and to understand how to produce the input data for its functions please check out the [isotopeEnrichment](https://github.com/mgleeming/isotopeEnrichment/blob/master/README.md) repository, which contains the python dependencies on which this R package relies.
 
 ## Installation
 
