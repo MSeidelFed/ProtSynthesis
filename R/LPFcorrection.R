@@ -16,10 +16,10 @@
 #' ...
 
 LPFcorrection <- function(InputNonCorrMat,
-                          files2correct = NULL,
-                          AA4correction = NULL,
-                          AAinterprtFileDir,
-                          ProtPTMs,
+                          files2correct = list.files(path = system.file("extdata", package = "ProtSynthesis"), pattern = "Mean_Norm_Factor"),
+                          AA4correction = c("Serine", "Glycine"),
+                          AAinterprtFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/", "AminoAcidNames2SingleLetters.csv"),
+                          ProtPTMs = c("OX", "AC"),
                           CorrectMeans = FALSE,
                           EnrBoundary = 1,
                           GroupPeptides = T) {
