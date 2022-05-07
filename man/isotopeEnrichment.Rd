@@ -5,17 +5,21 @@
 \title{A function to optimize peptide isotopolog intensities and transform them into IsoCorrectoR input files}
 \usage{
 isotopeEnrichment(
-  PyResultsDir,
+  PyResultsDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/",
+    "intensities.tsv"),
   returnCSV = TRUE,
   verbose = FALSE,
   rmIsotopologs = 0,
   OptimizeIsotopologNr = FALSE,
-  files2correct = NULL,
-  AA4correction = NULL,
-  AAinterprtFileDir,
-  ElementalFileDir,
-  ProtPTMs,
-  LabelledSamplesNr
+  files2correct = list.files(path = system.file("extdata", package = "ProtSynthesis"),
+    pattern = "Mean_Norm_Factor"),
+  AA4correction = c("Serine", "Glycine"),
+  AAinterprtFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/",
+    "AminoAcidNames2SingleLetters.csv"),
+  ElementalFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/",
+    "ElementFile.csv"),
+  ProtPTMs = c("OX", "AC"),
+  LabelledSamplesNr = 6
 )
 }
 \arguments{

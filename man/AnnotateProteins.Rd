@@ -6,10 +6,13 @@
 \usage{
 AnnotateProteins(
   PeptideVector,
-  Treatment,
-  FileName,
-  Path2FASTA,
-  Path2MQev,
+  Treatment = as.factor(c(rep("Control_NL", 3), rep("Control_L", 3),
+    rep("Treatment_NL", 3), rep("Treatment_L", 3))),
+  FileName = "test",
+  Path2FASTA = paste0(system.file("extdata", package = "ProtSynthesis"), "/",
+    "160517_Hv_IBSC_PGSB_r1_proteins_HighConf_REPR_annotation.fasta"),
+  Path2MQev = paste0(system.file("extdata", package = "ProtSynthesis"), "/",
+    "evidence.txt"),
   LabelFactor = as.factor(rep(c(rep("Control", 3), rep("Labelled", 3)), 2)),
   EnrichmentFileDir,
   cexSeq = 1,

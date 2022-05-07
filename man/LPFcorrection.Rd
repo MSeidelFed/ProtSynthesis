@@ -6,18 +6,18 @@
 \usage{
 LPFcorrection(
   InputNonCorrMat,
-  files2correct = NULL,
-  AA4correction = NULL,
-  AAinterprtFileDir,
-  ProtPTMs,
+  files2correct = list.files(path = system.file("extdata", package = "ProtSynthesis"),
+    pattern = "Mean_Norm_Factor"),
+  AA4correction = c("Serine", "Glycine"),
+  AAinterprtFileDir = paste0(system.file("extdata", package = "ProtSynthesis"), "/",
+    "AminoAcidNames2SingleLetters.csv"),
+  ProtPTMs = c("OX", "AC"),
   CorrectMeans = FALSE,
   EnrBoundary = 1,
   GroupPeptides = T
 )
 }
 \arguments{
-\item{InputNonCorrMat}{}
-
 \item{files2correct}{Defaults to NULL. List of file directories, where each file contains the enrichments in soluble amino acids per treatment evaluated.}
 
 \item{AA4correction}{Defaults to NULL. Character vector with the names of the amino acids to be used for the calculations. The amino acids must be present in the files from the previous parameter.}
