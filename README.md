@@ -15,7 +15,7 @@ library(devtools)
 devtools::install_github("MSeidelFed/RandodiStats_package")
 library(RandoDiStats)
 
-### Install KineticMSI
+### Install ProtSynthesis
 
 devtools::install_github("MSeidelFed/ProtSynthesis")
 library(ProtSynthesis)
