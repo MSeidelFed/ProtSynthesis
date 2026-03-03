@@ -115,6 +115,7 @@ def main():
 
     raw_data = consolidate_data(file_list = file_list)
     isocorrected_data = make_inputs_to_isocorr(raw_data)
+    isocorrected_data.to_csv('output/isocorrected_data.csv')
 
 
 if __name__ == "__main__":
