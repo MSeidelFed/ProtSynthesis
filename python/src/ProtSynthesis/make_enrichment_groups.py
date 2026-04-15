@@ -1,9 +1,10 @@
 import polars as pl
 import matplotlib.pyplot as plt
+import os
 
 import numpy as np
 import scipy.stats
-
+import itertools
 
 
 def make_gene_id_lookup(idmap_path):
@@ -42,10 +43,12 @@ def map_to_ensembl_id(uniprot_ids, id_lookup):
 
 
 
-def plot_replicates(df, replicate_groups, outpath ='gene_enrichment_correlation_shoots.pdf'):
+def plot_replicates(df, replicate_groups, outpath):
 
     fig,ax = plt.subplots(2,3)
     ax = np.ravel(ax)
+
+    replicate_groups = {k:v for k,v in replicate_groups.items() if len(v) == 2}
 
     for i,(rgroup,(r1,r2)) in enumerate(replicate_groups.items()):
 
@@ -63,17 +66,15 @@ def plot_replicates(df, replicate_groups, outpath ='gene_enrichment_correlation_
 
     fig.tight_layout()
 
-    fig.savefig(outpath)
+    replicate_figure_path = os.path.join(outpath,'replicates.pdf')
+
+    fig.savefig(replicate_figure_path)
         
 
 
 
 
-
-
-
-
-def process_data(df, id_lookup, experimental_conditions = ['10°C', '20°C', '30°C'], treatment_id = '15GLY-15SER_shoot', control_id = 'GLY-SER_shoot', sample_id = "normalized_gene_enrichment"):
+def process_data(df, id_lookup, figure_path,  experimental_conditions = ['10°C', '20°C', '30°C'], treatment_id = '15GLY-15SER_root', control_id = 'GLY-SER_root', sample_id = "normalized_gene_enrichment"):
     
     """
     This function converts a dataframe consisting of peptide fragments to genes. 
@@ -90,9 +91,13 @@ def process_data(df, id_lookup, experimental_conditions = ['10°C', '20°C', '30
 
     #This substitutes ensembl_ids for uni_prot_ids when possible. Mean enrichments are averaged across genes. For peptides that match to multiple fragments the rows are duplicated.
 
-    df = df.with_columns(pl.col('protein_group').map_elements(lambda a: map_to_ensembl_id(a,id_lookup), return_dtype=pl.List(pl.String)).alias('gene_ids')).select(['normalized_mean_enrichment','sample','gene_ids']).explode('gene_ids').group_by(['sample','gene_ids']).agg(pl.mean('normalized_mean_enrichment').alias('gene_enrichment'))
+    df = df.with_columns(pl.col('protein_group').map_elements(lambda a: map_to_ensembl_id(a,id_lookup), return_dtype=pl.List(pl.String)).alias('gene_ids')).select(['normalized_mean_enrichment','sample','gene_ids']).explode('gene_ids').group_by(['sample','gene_ids']).agg(pl.mean('normalized_mean_enrichment').alias('gene_enrichment'), (pl.col('normalized_mean_enrichment').std() / pl.col('normalized_mean_enrichment').count().sqrt()).alias('sem_gene_enrichment'))
+   
 
-    df= df.pivot(on = 'sample',values = ['gene_enrichment'])
+    #df = df.with_columns(pl.col('protein_group').map_elements(lambda a: map_to_ensembl_id(a,id_lookup), return_dtype=pl.List(pl.String)).alias('gene_ids')).select(['normalized_mean_enrichment','sample','gene_ids']).explode('gene_ids').group_by(['sample','gene_ids']).agg(pl.mean('normalized_mean_enrichment').alias('gene_enrichment'), (pl.col('normalized_mean_enrichment').std()).alias('std'), pl.col('normalized_mean_enrichment').count().alias('count'))
+
+
+    df= df.pivot(on = 'sample',values = ['gene_enrichment','sem_gene_enrichment'])
 
     replicate_groups = {}
 
@@ -103,7 +108,8 @@ def process_data(df, id_lookup, experimental_conditions = ['10°C', '20°C', '30
         replicate_groups[rname].append(c)
 
 
-    sample_ids = [f'{e}_{sample_id}'for e in experimental_conditions]
+    sample_ids = [f'{e}_{treatment_id}'for e in experimental_conditions]
+    #plot_replicates(df, replicate_groups=replicate_groups, outpath=figure_path)
 
     #Here we combine replicates. I required the gene to be presence in both replicates to be included 
 
@@ -111,13 +117,25 @@ def process_data(df, id_lookup, experimental_conditions = ['10°C', '20°C', '30
 
     #Here we subtracted the gene_enrichment of the unlabeled samples from the labeled
 
-    df = df.with_columns((pl.col(f'{t}_{treatment_id}') - pl.col(f'{t}_{control_id}')).alias(f'{t}_{sample_id}') for t in experimental_conditions).select(['gene_ids'] + [f'{t}_{sample_id}' for t in temp]).filter(pl.sum_horizontal(pl.all().is_null()) < len(sample_ids) -1 )
+    #df = df.with_columns((pl.col(f'{t}_{treatment_id}') - pl.col(f'{experimental_conditions[t]}_{control_id}')).alias(f'{t}_{sample_id}') for t in experimental_conditions).select(['gene_ids'] + [f'{t}_{sample_id}' for t in experimental_conditions]).filter(pl.sum_horizontal(pl.all().is_null()) < len(sample_ids) -1 )
+    #df = df.with_columns((pl.col(f'gene_enrichment_{t}_{treatment_id}')).alias(f'{t}_{sample_id}') for t in experimental_conditions).select(['gene_ids'] + [f'{t}_{sample_id}' for t in experimental_conditions]).filter(pl.sum_horizontal(pl.all().is_null()) < len(sample_ids) -1 )
+
+
+    df = df.filter(pl.sum_horizontal(pl.col([r for r in replicate_groups if r.startswith('gene_enrichment') and treatment_id in r]).is_null()) < len(sample_ids) / 2 -1).select(['gene_ids'] + [r for r in replicate_groups if treatment_id in r])
+
 
     #negative gene_enrichment values were replaced with 0
 
-    df = df.with_columns(pl.when(pl.col(s) < 0).then(0).otherwise(pl.col(s)).alias(s) for s in sample_ids)
+    df = df.with_columns((pl.when(pl.col(f'gene_enrichment_{s}') < 0).then(0).otherwise(pl.col(f'gene_enrichment_{s}')).alias(f'gene_enrichment_{s}') for s in sample_ids)).with_columns((pl.when(pl.col(f'gene_enrichment_{s}') > 1).then(1).otherwise(pl.col(f'gene_enrichment_{s}')).alias(f'gene_enrichment_{s}') for s in sample_ids))
 
-    return df
+
+    norm_cols = [c for c in df.columns if c.startswith('gene_enrichment')]
+
+
+    df = df.with_columns(np.log2((pl.col(s1) / pl.col(s2))).alias(f'delta {s1.split('_')[2]} / {s2.split('_')[2]}') for s1,s2 in itertools.combinations(norm_cols, 2))
+
+
+    return df.select(['gene_ids'] + [c for c in df.columns if 'delta' in c])
 
 
 def get_gene_enrichment(df, q = 0.9):
@@ -134,6 +152,23 @@ def get_gene_enrichment(df, q = 0.9):
         gene_enrichment[c] = {'enriched': enirched_genes, 'all' : all_genes}
 
 
+    return gene_enrichment
+
+
+def get_gene_enrichment(df, thresh = 1.5):
+
+    """
+    This function takes a polars dataframe consiting of normalized enirchment scores for different experimental conditions and returns a dict consiting of keys of experimental conditions and values of ensembl gene_ids
+    """
+
+    gene_enrichment = {}
+
+    for c in df.columns[1:]:
+        enirched_genes = df.filter((pl.col(c) >= thresh) & (pl.col(c).is_not_nan())).select('gene_ids').to_numpy().reshape(1,-1).tolist()[0]
+        depleted_genes = df.filter((pl.col(c) <= -thresh) & (pl.col(c).is_not_nan())).select('gene_ids').to_numpy().reshape(1,-1).tolist()[0]
+        all_genes = df.filter(pl.col(c).is_not_nan()).select('gene_ids').to_numpy().reshape(1,-1).tolist()[0]
+        gene_enrichment[c] = {'enriched': enirched_genes, 'all' : all_genes, 'depleted': depleted_genes}
+
 
     return gene_enrichment
 
@@ -147,12 +182,27 @@ def get_gene_enrichment(df, q = 0.9):
 
 
 
-id_lookup = make_gene_id_lookup('genome/ARATH_3702_idmapping.dat')
-df = pl.read_csv('output/total_proteome/shoots/isocorrected_shoots.csv')
-df_processed = process_data(df, id_lookup=id_lookup)
 
-gene_enrichment_groups = get_gene_enrichment(df_processed)
 
+def plot_mean_enirch_hist(df):
+
+    fig,ax = plt.subplots(1)
+    
+    for c in df.select(pl.selectors.numeric()).columns:
+        ax.hist(df.select(c).to_numpy().T[0], cumulative=True, histtype='step', density='True', bins = 1000)
+
+
+
+
+
+
+def run(df, idmap_path, figure_path, params):
+
+    id_lookup = make_gene_id_lookup(idmap_path=idmap_path)
+    df = process_data(df, id_lookup=id_lookup, figure_path = figure_path, **params)
+    gene_enrichment_groups = get_gene_enrichment(df)
+
+    return df, gene_enrichment_groups
 
 
 
