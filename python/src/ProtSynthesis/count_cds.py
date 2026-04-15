@@ -1,6 +1,7 @@
 import pyfastx
 import numpy as np
-
+import polars as pl 
+ 
 codon_to_aa = {"TTT" : "F",
           "TTC" : "F",
           "TTA" : "L",
@@ -126,13 +127,10 @@ class CDSCounter:
 
 
 
-fasta_path = 'genome/Arabidopsis_thaliana.TAIR10.cds.all.fa'
-cds_counts = [CDSCounter.from_seq(s) for s in pyfastx.Fasta(fasta_path)]
+def run(fasta_path):
+    cds_counts = [CDSCounter.from_seq(s) for s in pyfastx.Fasta(fasta_path)]
+    df_gene= pl.DataFrame([c.to_df() for c in cds_counts],schema = cds_counts[0].df_columns, orient="row")
+    df_gene = df_gene.sort('codon_count').group_by('gene_id').last()
 
-import polars as pl
+    return df_gene
 
-
-df = pl.DataFrame([c.to_df() for c in cds_counts],schema = cds_counts[0].df_columns, orient="row")
-df_clean = df.sort('codon_count').group_by('gene_id').last()
-
-df_clean.filter(pl.col('gene_id').is_in(e))
