@@ -1,11 +1,13 @@
 import argparse
 import glob
+import os
 
 import pandas as pd
 import numpy as np
+import polars as pl
 
 import isocor
-import count_glyser
+import src.ProtSynthesis.count_glyser as count_glyser 
 
 
 
@@ -101,26 +103,12 @@ def make_inputs_to_isocorr(df, isotopes, tracer_mass = 15, tracer_element = "N",
     return df_isocorr
 
 
+def run(results_path, isotopes_path, schema_path, data_path, experimental_id):
 
-def main():
-
-    parser = argparse.ArgumentParser(description= "Python wrapper around isocor")
-    parser.add_argument("-f", type= str, help="Path to results.dat")
-    parser.add_argument("-i", type = str, help='isotopes.dat path')
-    parser.add_argument("-o", type = str, help="Output path")
-    parser.add_argument("-s", type=str, help = "path to schema" )
-    args = parser.parse_args()
-
-    results_path = args.f
     raw_data = pd.read_csv(results_path, sep = '\t')
     raw_data.columns = [c.replace(' ','_').lower() for c in raw_data.columns]
     raw_data = raw_data.fillna(0)
 
-    output_path = args.o
-    isotopes_path = args.i
-    schema_path = args.s
-
-    schema_path = 'data/total_proteome_labeled/2026_schema_shoot.csv'
     schema_df = pd.read_csv(schema_path)
 
     sample_lookup = {file:f'{sample}_{file.split('_')[-1]}' for _, sample, file in schema_df.loc[:,['Sample','File']].itertuples()}
@@ -136,8 +124,7 @@ def main():
     #isocorrected_data = isocorrected_data[isocorrected_data.loc[:,"gly_ser_count"] != 0]
 
     isocorrected_data.loc[:,'normalized_mean_enrichment'] = (isocorrected_data.loc[:,'mean_enrichment'] / isocorrected_data.loc[:,'gly_ser_count'].replace(0,np.nan)).replace(np.nan, 0)
-    isocorrected_data.to_csv(output_path)
+    isocorrected_data_path = os.path.join(data_path,f'{experimental_id}_isocorrected_data.csv')
+    isocorrected_data.to_csv(isocorrected_data_path)
 
-
-if __name__ == "__main__":
-    main()
+    return pl.from_pandas(isocorrected_data)
