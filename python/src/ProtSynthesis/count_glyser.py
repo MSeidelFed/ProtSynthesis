@@ -9,6 +9,7 @@ def count_gly_ser(peptide):
 
     modification = False
     gs_count = 0
+    aa_count = 0
 
     for aa in peptide:
         if aa == '[':
@@ -18,10 +19,11 @@ def count_gly_ser(peptide):
         elif modification == False:
             if aa == 'G' or aa =='S':
                 gs_count += 1
-        else: 
+            aa_count += 1
+        else:
             continue
 
-    return gs_count
+    return gs_count / aa_count
 
         
 
